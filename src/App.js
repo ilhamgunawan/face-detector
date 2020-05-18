@@ -15,7 +15,7 @@ const app = new Clarifai.App({
 const particlesOptions = {
   "particles": {
     "number": {
-        "value": 50
+        "value": 70
     },
     "size": {
         "value": 3
@@ -36,24 +36,38 @@ class App extends Component {
     super();
     this.state = {
       inputLink: '',
-      imgLink: ''
+      imgLink: '',
+      box: {}
     };
   }
 
-  onInputChange = (event) => {
+  calculateFacelocation = data => {
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById('inputimage');
+    const width = Number(image.width);
+    const height = Number(image.height);
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height),
+    }
+  }
+
+  displayBoundingBox = box => {
+    this.setState({box: box});
+  }
+
+  onInputChange = event => {
     this.setState({inputLink: event.target.value});
   }
 
   onButtonClick = () => {
     this.setState({imgLink: this.state.inputLink});
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.inputLink).then(
-      function(response) {
-        console.log(response.outputs[0].data.regions[0].region_info.bounding_box);
-      },
-      function(err) {
-        // there was an error
-      }
-    );
+    app.models
+      .predict(Clarifai.FACE_DETECT_MODEL, this.state.inputLink)
+      .then(response => this.displayBoundingBox(this.calculateFacelocation(response)))
+      .catch(err => console.log(err));
   }
 
   render() {
@@ -64,7 +78,7 @@ class App extends Component {
         <Logo />
         <Rank />
         <ImageLinkForm inputChange={this.onInputChange} buttonClicked={this.onButtonClick} />
-        <FaceRecognition imageUrl={this.state.imgLink} />
+        <FaceRecognition box={this.state.box} imageUrl={this.state.imgLink} />
 
   
       </div>
