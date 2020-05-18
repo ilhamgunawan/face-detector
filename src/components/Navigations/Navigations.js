@@ -1,10 +1,10 @@
 import React from 'react';
 
-const Navigation = () => {
+const Navigation = ({ onStateChange }) => {
     return (
         <div className='App' style={{display: 'flex', justifyContent: 'flex-end'}}>
             <nav>
-                <p className='f3 link dim black underline pa3 pointer'>Sign Out</p>
+                <p onClick={() => onStateChange('signin')} className='f5 link dim black ma3 underline pointer'>Sign Out</p>
             </nav>
         </div>
     );
