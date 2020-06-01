@@ -17,18 +17,17 @@ const app = new Clarifai.App({
 const particlesOptions = {
   "particles": {
     "number": {
-        "value": 70
+        "value": 100
     },
     "size": {
-        "value": 3
-    }
-  },
-  "interactivity": {
-    "events": {
-        "onclick": {
-            "enable": true,
-            "mode": "push"
-        }
+        "value": 0
+    },
+    "links": {
+        "color": {
+            "distance": 200,
+            "opacity": 1
+        },
+        "width": 5
     }
   }
 };
@@ -40,8 +39,28 @@ class App extends Component {
       inputLink: '',
       imgLink: '',
       box: {},
-      route: 'signin'
+      route: 'signin',
+      user: {
+        id: '',
+        name: '',
+        email: '',
+        password: '',
+        entries: 0,
+        joined: ''
+      }
     };
+  }
+
+  loadUser = userData => {
+    this.setState({
+      user: {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        entries: userData.entries,
+        joined: userData.joined
+      }
+    });
   }
 
   calculateFacelocation = data => {
@@ -65,16 +84,35 @@ class App extends Component {
     this.setState({inputLink: event.target.value});
   }
 
-  onButtonClick = () => {
+  onImageSubmit = () => {
     this.setState({imgLink: this.state.inputLink});
     app.models
       .predict(Clarifai.FACE_DETECT_MODEL, this.state.inputLink)
-      .then(response => this.displayBoundingBox(this.calculateFacelocation(response)))
+      .then(response => {
+        if (response.outputs[0]) {
+          fetch('http://localhost:3030/image', {
+            method: 'put',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          })
+            .then(response => response.json())
+            .then(newEntries => {
+              Object.assign(this.state.user, {entries: newEntries});
+              this.displayBoundingBox(this.calculateFacelocation(response));
+            });
+        }
+      })
       .catch(err => console.log(err));
   }
 
   onStateChange = (route) => {
-    this.setState({route: route});
+    this.setState({
+      route: route,
+      inputLink: '',
+      imgLink: ''
+    });
   }
 
   render() {
@@ -85,18 +123,18 @@ class App extends Component {
           ? <div>
               <Navigation onStateChange={this.onStateChange} />
               <Logo />
-              <Rank />
-              <ImageLinkForm inputChange={this.onInputChange} buttonClicked={this.onButtonClick} />
+              <Rank name={this.state.user.name} entries={this.state.user.entries} />
+              <ImageLinkForm inputChange={this.onInputChange} buttonClicked={this.onImageSubmit} />
               <FaceRecognition box={this.state.box} imageUrl={this.state.imgLink} />
             </div>
           : (this.state.route === 'signin'
               ? <div>
                   <Logo />
-                  <Signin onStateChange={this.onStateChange} />
+                  <Signin loadUser={this.loadUser} onStateChange={this.onStateChange} />
                 </div>
               : <div>
                   <Logo />
-                  <Register onStateChange={this.onStateChange} />
+                  <Register loadUser={this.loadUser} onStateChange={this.onStateChange} />
                 </div>
             )
         }
