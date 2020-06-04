@@ -31,9 +31,11 @@ class Signin extends Component {
                 if (user.id) {
                     this.props.loadUser(user);
                     this.props.onStateChange('home');
+                } else {
+                    alert('Wrong Credentials');
                 }
             })
-            .catch(err => alert('User not found. Wrong email and password combination.'));
+            .catch(err => alert('Wrong Credentials'));
 
     }
 
