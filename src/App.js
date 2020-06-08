@@ -90,7 +90,7 @@ class App extends Component {
       .predict(Clarifai.FACE_DETECT_MODEL, this.state.inputLink)
       .then(response => {
         if (response.outputs[0]) {
-          fetch('http://localhost:3030/image', {
+          fetch('https://powerful-beach-15259.herokuapp.com/image', {
             method: 'put',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

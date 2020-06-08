@@ -23,7 +23,7 @@ class Register extends Component {
     }
 
     onSignUpClick = () => {
-        fetch('http://localhost:3030/register', {
+        fetch('https://powerful-beach-15259.herokuapp.com/register', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -34,11 +34,14 @@ class Register extends Component {
         })
             .then(response => response.json())
             .then(user => {
-                if (user) {
+                if (user.email) {
                     this.props.loadUser(user);
                     this.props.onStateChange('home');
+                } else {
+                    alert('Unable to sign up.');
                 }
             })
+            .catch(err => alert('Unable to sing up'));
     }
 
     render() {
